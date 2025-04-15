@@ -361,7 +361,7 @@
       // 切换版本功能
       document.getElementById('toggleFileBtn').addEventListener('click', async () => {
         isOrderVersion = !isOrderVersion;
-        const file = isOrderVersion ? './shuaige/英语六级词汇乱序版.json' : './shuaige/英语六级词汇正序版.json';
+        const file = isOrderVersion ? '/shuaige/英语六级词汇乱序版.json' : '/shuaige/英语六级词汇正序版.json';
         currentData = await fetchData(file);
         document.getElementById('currentFile').textContent = isOrderVersion ? '顺序版' : '乱序版';
         renderCards(currentData);
