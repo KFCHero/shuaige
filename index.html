@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>单词卡片展示</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+    /* 头部固定悬浮 */
+    .header {
+      position: sticky;
+      top: 0;
+      background-color: #fff;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .search-box {
+      display: flex;
+      width: 50%;
+      gap: 10px;
+    }
+    .search-box input {
+      flex: 1;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      outline: none;
+    }
+    .search-box button,
+    .file-switcher button,
+    .show-selected-btn {
+      padding: 10px 20px;
+      background-color: #409EFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    .search-box button:hover,
+    .file-switcher button:hover,
+    .show-selected-btn:hover {
+      background-color: #66b1ff;
+    }
+    .file-switcher {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      user-select: none;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    .card.selected {
+      border: 2px solid #409EFF;
+    }
+    .word-info {
+      flex: 1;
+    }
+    .word {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    .phonetic {
+      color: #666;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    .definition {
+      color: #444;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    .checkbox-container input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      pointer-events: none;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+    .popup-content {
+      position: relative;
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 30px;
+      border-radius: 8px;
+      width: 70%;
+      max-width: 600px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+    .close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    .prompt-content {
+      margin-bottom: 15px;
+      font-size: 16px;
+      color: #333;
+    }
+    .words-content {
+      margin: 20px 0;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .copy-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #409EFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      float: right;
+    }
+    .copy-btn:hover {
+      background-color: #66b1ff;
+    }
+    .title {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .title h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .title p {
+      color: #666;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">
+      <h1>单词卡片展示</h1>
+      <p>选择、搜索和学习单词</p>
+    </div>
+    <div class="header">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="输入单词名称进行搜索">
+        <button id="searchBtn"><i class="fas fa-search"></i></button>
+        <button class="show-selected-btn" id="showSelectedBtn">显示选中单词</button>
+      </div>
+      <div class="file-switcher">
+        <button id="toggleFileBtn">切换版本</button>
+        <span id="currentFile">顺序版</span>
+      </div>
+    </div>
+    <div class="cards-container" id="cardsContainer">
+      <!-- 卡片将在这里动态生成 -->
+    </div>
+  </div>
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <span class="close">&times;</span>
+      <h2>选中单词</h2>
+      <!-- 弹窗顶部显示提示词 -->
+      <div class="prompt-content" id="promptContent">
+        请利用下列单词拼凑成一段话，除了下面展示的单词使用英文，其余的部分均使用汉语，英文单词后面加上括号，括号内是这个单词在句子中的汉语意思，要求语句通顺，意义明确，输出格式为一段话，不需要换行以及其他解释性词语。
+      </div>
+      <div class="words-content" id="selectedWordsContent"></div>
+      <button class="copy-btn" id="copyBtn">复制内容</button>
+      <div style="clear: both;"></div>
+    </div>
+  </div>
+  <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script>
+    let currentData = [];
+    let selectedCards = new Set();
+    let isOrderVersion = true;
+
+    // 用于单击与拖拽多选的变量
+    let isMouseDown = false;
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let selectionMode = null; // "select" 或 "deselect"
+
+    async function fetchData(file) {
+      try {
+        const response = await fetch(file);
+        return await response.json();
+      } catch (error) {
+        console.error('Fetch error:', error);
+        return [];
+      }
+    }
+
+    async function initPage() {
+      try {
+        currentData = await fetchData('英语六级词汇乱序版.json');
+        renderCards(currentData);
+        setupEventListeners();
+      } catch (error) {
+        console.error('初始化错误:', error);
+      }
+    }
+
+    function renderCards(data) {
+      const container = document.getElementById('cardsContainer');
+      container.innerHTML = '';
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.index = item.序号;
+        card.innerHTML = `
+          <div class="word-info">
+            <div class="word">${item.单词}</div>
+            <div class="phonetic">${item.音标}</div>
+            <div class="definition">${item.释义}</div>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="checkbox-${item.序号}" data-index="${item.序号}">
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function setupEventListeners() {
+      const container = document.getElementById('cardsContainer');
+
+      // 单击/拖动选择逻辑（对非复选框区域生效）
+      container.addEventListener('mousedown', (e) => {
+        const card = e.target.closest('.card');
+        if (!card || (e.target && e.target.type === 'checkbox')) return;
+        isMouseDown = true;
+        isDragging = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        // 记录初始卡片并立即切换其状态
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        const index = parseInt(card.dataset.index);
+        const newState = !checkbox.checked;
+        checkbox.checked = newState;
+        card.classList.toggle('selected', newState);
+        selectionMode = newState ? 'select' : 'deselect';
+        if (newState) {
+          selectedCards.add(index);
+        } else {
+          selectedCards.delete(index);
+        }
+        e.preventDefault();
+      });
+
+      container.addEventListener('mousemove', (e) => {
+        if (!isMouseDown) return;
+        if (!isDragging) {
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          if (Math.sqrt(dx * dx + dy * dy) > 5) {
+            isDragging = true;
+          }
+        }
+        if (isDragging) {
+          const card = e.target.closest('.card');
+          if (!card) return;
+          const checkbox = card.querySelector('input[type="checkbox"]');
+          const index = parseInt(card.dataset.index);
+          if (selectionMode === 'select' && !checkbox.checked) {
+            checkbox.checked = true;
+            card.classList.add('selected');
+            selectedCards.add(index);
+          } else if (selectionMode === 'deselect' && checkbox.checked) {
+            checkbox.checked = false;
+            card.classList.remove('selected');
+            selectedCards.delete(index);
+          }
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        isMouseDown = false;
+        isDragging = false;
+      });
+
+      // 支持复选框直接点击（保持与卡片状态同步）
+      container.addEventListener('click', (e) => {
+        if (e.target && e.target.type === 'checkbox') {
+          const card = e.target.closest('.card');
+          const index = parseInt(card.dataset.index);
+          card.classList.toggle('selected', e.target.checked);
+          if (e.target.checked) {
+            selectedCards.add(index);
+          } else {
+            selectedCards.delete(index);
+          }
+        }
+      });
+
+      // 搜索功能
+      document.getElementById('searchBtn').addEventListener('click', () => {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const filteredData = currentData.filter(item =>
+          item.单词.toLowerCase().includes(searchTerm)
+        );
+        renderCards(filteredData);
+        selectedCards.clear();
+      });
+
+      // 切换版本功能
+      document.getElementById('toggleFileBtn').addEventListener('click', async () => {
+        isOrderVersion = !isOrderVersion;
+        const file = isOrderVersion ? '英语六级词汇乱序版.json' : '英语六级词汇正序版.json';
+        currentData = await fetchData(file);
+        document.getElementById('currentFile').textContent = isOrderVersion ? '顺序版' : '乱序版';
+        renderCards(currentData);
+        selectedCards.clear();
+      });
+
+      // 显示弹窗
+      document.getElementById('showSelectedBtn').addEventListener('click', showSelectedWords);
+
+      // 关闭弹窗
+      document.querySelector('.close').addEventListener('click', () => {
+        document.getElementById('popup').style.display = 'none';
+      });
+
+      window.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('popup')) {
+          document.getElementById('popup').style.display = 'none';
+        }
+      });
+    }
+
+    function showSelectedWords() {
+      const popup = document.getElementById('popup');
+      const content = document.getElementById('selectedWordsContent');
+      if (selectedCards.size === 0) {
+        content.textContent = '没有选中任何单词';
+      } else {
+        const words = Array.from(selectedCards)
+          .map(index => currentData.find(item => item.序号 === index)?.单词)
+          .filter(word => word);
+        content.textContent = words.join('、');
+      }
+      popup.style.display = 'block';
+    }
+
+    // 复制按钮事件，复制提示词与选中单词
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const promptText = document.getElementById('promptContent').textContent;
+      const words = document.getElementById('selectedWordsContent').textContent;
+      const textToCopy = promptText + '\n' + words;
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => alert('复制成功！'))
+        .catch(() => alert('复制失败，请手动选择文本'));
+    });
+
+    window.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>
